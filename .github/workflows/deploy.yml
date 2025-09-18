@@ -3,7 +3,7 @@ name: Deploy to Elastic Beanstalk
 on:
   push:
     branches:
-      - main   # deploy when pushing to main
+      - main
 
 jobs:
   deploy:
@@ -23,6 +23,11 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
+      # ✅ Package app into a zip
+      - name: Zip application
+        run: zip -r app.zip . -x "venv/*" ".git/*" ".github/*" "__pycache__/*"
+
+      # ✅ Deploy to EB
       - name: Deploy to AWS Elastic Beanstalk
         uses: einaregilsson/beanstalk-deploy@v21
         with:
@@ -30,6 +35,6 @@ jobs:
           aws_secret_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           application_name: ${{ secrets.EB_APP_NAME }}
           environment_name: ${{ secrets.EB_ENV_NAME }}
-          region: ${{ secrets.AWS_REGION }}
           version_label: github-${{ github.sha }}
-          deployment_package: .
+          region: ${{ secrets.AWS_REGION }}
+          deployment_package: app.zip
